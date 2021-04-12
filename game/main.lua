@@ -182,9 +182,32 @@ function love.load()
 	break1 = false
 	break2 = false
 	unlocked = false
+
+	-- sounds
+	sounds = {
+		['theme'] = love.audio.newSource('sounds/.wav','static'),
+		['new_level'] = love.audio.newSource('sounds/.wav','static'),
+		['picked_starting_landmass'] = love.audio.newSource('sounds/.wav','static'),
+        ['footsteps'] = love.audio.newSource('sounds/footsteps.wav', 'static'),
+        ['success'] = love.audio.newSource('sounds/.wav','static'),
+		['SBOK'] = love.audio.newSource('sounds/.wav','static'),
+        ['crack'] = love.audio.newSource('sounds/.wav', 'static'),
+		['triumphant'] = love.audio.newSource('sounds/.wav','static'),
+		['completion'] = love.audio.newSource('sounds/.wav','static')
+    }
 end
 
 function love.update(dt)
+	-- play theme music before levels begin
+	if level < 3 then
+		sounds['theme']:play()
+	end
+
+	--play completion music when player beats the game
+	if level == 23 and passed then
+		sounds['completion']:play()
+	end
+
 	-- timer to prevent players from accidentally skipping starting page and instruction page
 	if level < 3 and enforced_start_timer > 0 then
 		enforced_start_timer = enforced_start_timer - dt
@@ -225,11 +248,13 @@ function love.update(dt)
 
 	-- determining whether the player passed the level
 	if bridge_counter == 0 then
+		sounds['success']:play()
 		passed = true
 	end
 
 	-- that final level
 	if break1 and break2 then
+		sounds['triumphant']:play()
 		unlocked = true
 	end
 end
@@ -286,13 +311,26 @@ function love.draw()
 	if level < 24 then
 		-- bridges
 		for a = 1,#rail_pos_x[level] do
-			-- railings
-			love.graphics.setColor(0.4,0.4,0.4)
-			love.graphics.rectangle("fill",rail_pos_x[level][a]*width,rail_pos_y[level][a]*height,rail_dimen[level][a][1]*width,rail_dimen[level][a][2]*height)
-			-- roads
-			love.graphics.setColor(0.1,0.1,0.1)
-			love.graphics.rectangle("fill",rail_pos_x[level][a]*width + 5,rail_pos_y[level][a]*height + 5,rail_dimen[level][a][1]*width - 10,rail_dimen[level][a][2]*height - 10)
+			-- horizontal bridges
+			if rail_dimen[level][a][2] == 0.1 then
+				--railings
+				love.graphics.setColor(0.4,0.4,0.4)
+				love.graphics.rectangle("fill",rail_pos_x[level][a]*width,rail_pos_y[level][a]*height,rail_dimen[level][a][1]*width,rail_dimen[level][a][2]*height)
+				-- roads
+				love.graphics.setColor(0.1,0.1,0.1)
+				love.graphics.rectangle("fill",rail_pos_x[level][a]*width,rail_pos_y[level][a]*height + 5,rail_dimen[level][a][1]*width,rail_dimen[level][a][2]*height - 10)
+
+			-- vertical bridges
+			elseif rail_dimen[level][a][1] == 3/40 then
+				-- railings
+				love.graphics.setColor(0.4,0.4,0.4)
+				love.graphics.rectangle("fill",rail_pos_x[level][a]*width,rail_pos_y[level][a]*height,rail_dimen[level][a][1]*width,rail_dimen[level][a][2]*height)
+				-- roads
+				love.graphics.setColor(0.1,0.1,0.1)
+				love.graphics.rectangle("fill",rail_pos_x[level][a]*width + 5,rail_pos_y[level][a]*height,rail_dimen[level][a][1]*width - 10,rail_dimen[level][a][2]*height)
+			end
 		end
+
 		-- landmasses
 		for b = 1,#brown_pos_x[level] do
 			-- brown landmasses
@@ -342,10 +380,9 @@ end
 -- logic for incrementing level number
 function love.keypressed(key,scancode,isrepeat)
 	if key == "return" then 
-		-- Ensures that the player can only go to next level if he or she
-		-- passes the current level
+		-- Player must pass current level to move onto the next
 		if level >= 3 and passed then
-			if level < 22 then
+			if level < 21 then
 				level = level + 1
 				finallevel_timer = 1
 				level_timer = 1
@@ -357,6 +394,23 @@ function love.keypressed(key,scancode,isrepeat)
 				bridge_counter = #rail_pos_x[level]
 				passed = false
 				unlocked = false
+				sounds['new_level']:play()
+
+			-- In preparation for Seven Bridges of Konigsberg
+			if level == 21 then
+				level = level + 1
+				finallevel_timer = 1
+				level_timer = 1
+				picked_landmass = false
+				start_pos = {}
+				start_glow_dimen = {}
+				next_pos = {}
+				next_glow_dimen = {}
+				bridge_counter = #rail_pos_x[level]
+				passed = false
+				unlocked = false
+				sounds['SBOK']:play()
+
 		-- Unlock final level
 			elseif level == 22 and unlocked then
 				level = level + 1
@@ -401,7 +455,7 @@ function love.mousepressed(x,y,button,istouch)
 				next_pos = {brown_pos_x[level][r],brown_pos_y[level][r]}
 				next_glow_dimen = brown_dimen[level][r]
 				picked_landmass = true
-				-- add some sound
+				sounds['picked_starting_landmass']:play()
 				break
 			end
 		end
@@ -414,39 +468,37 @@ function love.mousepressed(x,y,button,istouch)
 			if x > rail_pos_x[level][d]*width + 5 and x < rail_pos_x[level][d]*width + rail_dimen[level][d][1]*width - 5
 			and y > rail_pos_y[level][d]*height + 5 and y < rail_pos_y[level][d]*height + rail_dimen[level][d][2]*height - 5
 			then
+
 				-- if bridge is horizontal
 				if rail_dimen[level][d][2] == 0.1 then
 					-- check if starting x coordinate of bridge lies within highlighted landmass
-					if rail_pos_x[level][d] < start_pos[1] + start_glow_dimen[1] and rail_pos_x[level][d] > start_pos[1] then
+					if rail_pos_x[level][d] == start_pos[1] + start_glow_dimen[1] then
 						-- if it lies within highlighted landmass, highlight the landmass at the end of the bridge
 						for e = 1,#brown_pos_x[level] do
-							if rail_pos_x[level][d] + rail_dimen[level][d][1] > brown_pos_x[level][e]
-							and rail_pos_x[level][d] + rail_dimen[level][d][1] < brown_pos_x[level][e] + brown_dimen[level][e][1]
+							if rail_pos_x[level][d] + rail_dimen[level][d][1] == brown_pos_x[level][e]
 							and rail_pos_y[level][d] > brown_pos_y[level][e] 
-							and rail_pos_y[level][d] < brown_pos_y[level][e] + brown_dimen[level][e][2]
+							and rail_pos_y[level][d] + rail_dimen[level][d][2] < brown_pos_y[level][e] + brown_dimen[level][e][2]
 							then
 								next_pos = {brown_pos_x[level][e],brown_pos_y[level][e]}
 								next_glow_dimen = brown_dimen[level][e]
 								rail_dimen[level][d] = {0,0}
 								bridge_counter = bridge_counter - 1
-								-- add footstep sound
+								sounds['footsteps']:play()
 								break
 							end
 						end
 					-- if it doesn't lie within the highlighted landmass, highlight the landmass at the start of the bridge
-					elseif rail_pos_x[level][d] + rail_dimen[level][d][1] > start_pos[1] 
-						and rail_pos_x[level][d] + rail_dimen[level][d][1] < start_pos[1] + start_glow_dimen[1] then
+					elseif rail_pos_x[level][d] + rail_dimen[level][d][1] == start_pos[1] then
 						for f = 1,#brown_pos_x[level] do
-							if rail_pos_x[level][d] > brown_pos_x[level][f]
-							and	rail_pos_x[level][d] < brown_pos_x[level][f] + brown_dimen[level][f][1]
+							if rail_pos_x[level][d] == brown_pos_x[level][f] + brown_dimen[level][f][1]
 							and rail_pos_y[level][d] > brown_pos_y[level][f]
-							and rail_pos_y[level][d] < brown_pos_y[level][f] + brown_dimen[level][f][2]
+							and rail_pos_y[level][d] + rail_dimen[level][d][2] < brown_pos_y[level][f] + brown_dimen[level][f][2]
 							then
 								next_pos = {brown_pos_x[level][f],brown_pos_y[level][f]}
 								next_glow_dimen = brown_dimen[level][f]
 								rail_dimen[level][d] = {0,0}
 								bridge_counter = bridge_counter - 1
-								-- add footstep sound
+								sounds['footsteps']:play()
 								break
 							end
 						end
@@ -455,36 +507,33 @@ function love.mousepressed(x,y,button,istouch)
 				-- if bridge is vertical
 				elseif rail_dimen[level][d][1] == 3/40 then
 					-- check if starting y coordinate of bridge lies within highlighted landmass
-					if rail_pos_y[level][d] < start_pos[2] + start_glow_dimen[2] and rail_pos_y[level][d] > start_pos[2] then
+					if rail_pos_y[level][d] == start_pos[2] + start_glow_dimen[2] then
 						-- if it lies within highlighted landmass, highlight the landmass at the end of the bridge
 						for e = 1,#brown_pos_y[level] do
-							if rail_pos_y[level][d] + rail_dimen[level][d][2] > brown_pos_y[level][e]
-							and rail_pos_y[level][d] + rail_dimen[level][d][2] < brown_pos_y[level][e] + brown_dimen[level][e][2]
+							if rail_pos_y[level][d] + rail_dimen[level][d][2] == brown_pos_y[level][e]
 							and rail_pos_x[level][d] > brown_pos_x[level][e]
-							and rail_pos_x[level][d] < brown_pos_x[level][e] + brown_dimen[level][e][1]
+							and rail_pos_x[level][d] + rail_dimen[level][d][1] < brown_pos_x[level][e] + brown_dimen[level][e][1]
 							then
 								next_pos = {brown_pos_x[level][e],brown_pos_y[level][e]}
 								next_glow_dimen = brown_dimen[level][e]
 								rail_dimen[level][d] = {0,0}
 								bridge_counter = bridge_counter - 1
-								-- add footstep sound
+								sounds['footsteps']:play()
 								break
 							end
 						end
 					-- if it doesn't lie within the highlighted landmass, highlight the landmass at the start of the bridge
-					elseif rail_pos_y[level][d] + rail_dimen[level][d][2] >= start_pos[2] 
-						and rail_pos_y[level][d] + rail_dimen[level][d][2] < start_pos[2] + start_glow_dimen[2] then
+					elseif rail_pos_y[level][d] + rail_dimen[level][d][2] == start_pos[2] then
 						for f = 1,#brown_pos_y[level] do
-							if rail_pos_y[level][d] > brown_pos_y[level][f]
-							and	rail_pos_y[level][d] < brown_pos_y[level][f] + brown_dimen[level][f][2]
+							if rail_pos_y[level][d] == brown_pos_y[level][f] + brown_dimen[level][f][2]
 							and rail_pos_x[level][d] > brown_pos_x[level][f]
-							and rail_pos_x[level][d] < brown_pos_x[level][f] + brown_dimen[level][f][1]
+							and rail_pos_x[level][d] + rail_dimen[level][d][1] < brown_pos_x[level][f] + brown_dimen[level][f][1]
 							then
 								next_pos = {brown_pos_x[level][f],brown_pos_y[level][f]}
 								next_glow_dimen = brown_dimen[level][f]
 								rail_dimen[level][d] = {0,0}
 								bridge_counter = bridge_counter - 1
-								-- add footstep sound
+								sounds['footsteps']:play()
 								break
 							end
 						end
@@ -500,13 +549,13 @@ function love.mousepressed(x,y,button,istouch)
 		and y >= rail_pos_y[level][3]*height + 5 and y <= rail_pos_y[level][3]*height + rail_dimen[level][3][2]*height - 5
 		then
 			break1 = true
-			-- add bridge breaking sound
+			sounds['crack']:play()
 		end
 		if x >= rail_pos_x[level][4]*width + 5 and x <= rail_pos_x[level][4]*width + rail_dimen[level][4][1]*width - 5
 		and y >= rail_pos_y[level][4]*height + 5 and y <= rail_pos_y[level][4]*height + rail_dimen[level][4][2]*height - 5
 		then
 			break2 = true
-			-- add bridge breaking sound
+			sounds['crack']:play()
 		end
 	end
 end
