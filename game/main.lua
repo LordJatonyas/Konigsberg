@@ -1,7 +1,6 @@
 function love.load()
 	love.graphics.setDefaultFilter("nearest","nearest")
-	-- width = 960
-	-- height = 720
+	
 	-- landmasses
 	brown_pos_x = {
 	{30,630,30,630},
@@ -189,6 +188,11 @@ function love.load()
 	smallFont = love.graphics.newFont("font.ttf",34)
 	mediumFont = love.graphics.newFont("font.ttf",58)
 	largeFont = love.graphics.newFont("font.ttf",72)
+
+	-- sounds
+	sounds = {
+		['Clair'] = love.audio.newSource('sounds/ClairDeLune.wav','stream')
+	}
 	
 	--[[ sounds
 	sounds = {
@@ -205,23 +209,21 @@ function love.load()
 end
 
 function love.update(dt)
-	--[[ play theme music before levels begin
-	if level < 3 then
-		sounds['theme']:play()
-	end
+	-- play theme music throughout
+	sounds['Clair']:play()
 
-	--play completion music when player beats the game
+	--[[ play completion music when player beats the game
 	if level == 23 and passed then
 		sounds['completion']:play()
 	end]]
 
 	-- timer to prevent players from accidentally skipping starting page and instruction page
-	if level < 3 and enforced_start_timer > 0 then
+	if level <= 2 and enforced_start_timer > 0 then
 		enforced_start_timer = enforced_start_timer - dt
 	end
 	
 	-- make the "Press Enter" prompt flash
-	if enforced_start_timer <= 0 and level < 3 then
+	if enforced_start_timer <= 0 and level <= 2 then
 		if start_dim and start_timer > 0 then
 			start_timer = start_timer - dt
 		end
@@ -245,12 +247,12 @@ function love.update(dt)
 	end
 
 	-- timer for displaying level number
-	if level < 22 and level > 2 and level_timer	~= 0 then
+	if level >= 3 and level <= #brown_pos_x - 2 and level_timer ~= 0 then
 		level_timer = level_timer - 0.5 * dt
 		if level_timer < 0 then level_timer = 0 end
 	end
 	-- timer for displaying final level name
-	if level == 22 and finallevel_timer ~= 0 then
+	if level == #brown_pos_x - 1 and finallevel_timer ~= 0 then
 		finallevel_timer = finallevel_timer - 0.2 * dt
 		if finallevel_timer < 0 then finallevel_timer = 0 end
 	end
@@ -272,7 +274,7 @@ end
 function love.draw()
 	-- check memory usage
 	love.graphics.setFont(tinyFont)
-	love.graphics.setColor(1,1,1)
+	love.graphics.setColor(0.1,0.15,0.32)
 	love.graphics.print(collectgarbage('count'),10,10)
 
 	-- constant background colour (deep sea blue)
@@ -314,7 +316,7 @@ function love.draw()
 	end
 
 -- create map features based on tables (rail_pos_x,rail_pos_y,rail_dimen,brown_pos_x,brown_pos_y,brown_dimen) in each level
-	if level < 24 then
+	if level <= #brown_pos_x then
 		-- bridges
 		for a = 1,#rail_pos_x[level] do
 			-- horizontal bridges
@@ -349,28 +351,28 @@ function love.draw()
 	end
 
 	-- highlight starting landmass
-	if picked_landmass and ((level >= 3 and level < 22) or level == 23) then
+	if picked_landmass and ((level >= 3 and level <= #brown_pos_x - 2) or level == #brown_pos_x) then
 		love.graphics.setColor(0.4,0.25,0.3)
 		love.graphics.rectangle("fill",next_pos[1] + 5,next_pos[2] + 5,next_glow_dimen[1] - 10,next_glow_dimen[2] - 10)
 	end
 
 	-- level indicator
-	if level >= 3 and level < 22 and level_timer > 0 then
+	if level >= 3 and level <= #brown_pos_x - 2 and level_timer > 0 then
 		love.graphics.setFont(mediumFont)
 		love.graphics.setColor(1,1,1,level_timer)
 		love.graphics.printf("Level "..tostring(level-2),180,300,600,'center')
-	elseif level == 22 and finallevel_timer > 0 then
+	elseif level == #brown_pos_x - 1 and finallevel_timer > 0 then
 		love.graphics.setFont(mediumFont)
 		love.graphics.setColor(1,1,1,finallevel_timer)
 		love.graphics.printf("Seven Bridges of Konigsberg",180,300,600,'center')
 	end
 
 	-- print completion percentage
-	if level >= 3 and level < 22 and passed then
+	if level >= 3 and level <= #brown_pos_x - 2 and passed then
 		love.graphics.setFont(mediumFont)
 		love.graphics.setColor(1,1,1)
 		love.graphics.printf(tostring(5*(level-2)).."% Completed",180,300,600,'center')
-	elseif level == 23 and passed then
+	elseif level == #brown_pos_x and passed then
 		love.graphics.setFont(mediumFont)
 		love.graphics.setColor(1,1,1)
 		love.graphics.printf("100% Completed",180,300,600,'center')
@@ -383,7 +385,7 @@ function love.keypressed(key,scancode,isrepeat)
 	if key == "return" then 
 		-- Player must pass current level to move onto the next
 		if level >= 3 and passed then
-			if level < 21 then
+			if level <= #brown_pos_x - 3 then
 				level = level + 1
 				level_timer = 1
 				picked_landmass = false
@@ -396,7 +398,7 @@ function love.keypressed(key,scancode,isrepeat)
 				-- sounds['new_level']:play()
 
 			-- In preparation for Seven Bridges of Konigsberg
-			elseif level == 21 then
+			elseif level == #brown_pos_x - 2 then
 				level = level + 1
 				finallevel_timer = 1
 				level_timer = 1
@@ -411,7 +413,7 @@ function love.keypressed(key,scancode,isrepeat)
 				-- sounds['SBOK']:play()
 			end
 		-- Unlock final level
-		elseif level == 22 and unlocked then
+		elseif level == #brown_pos_x - 1 and unlocked then
 			level = level + 1
 			picked_landmass = false
 			start_pos = {}
@@ -422,7 +424,7 @@ function love.keypressed(key,scancode,isrepeat)
 			passed = false
 			
 		-- Allows player to just press Enter to move to next page
-		elseif level < 3 and enforced_start_timer <= 0 then
+		elseif level <= 2 and enforced_start_timer <= 0 then
 			enforced_start_timer = 3
 			start_timer = 1
 			level = level + 1
@@ -435,6 +437,12 @@ function love.keypressed(key,scancode,isrepeat)
 			passed = false
 		end
 	end
+	
+	-- quit game
+	if key == 'escape' then
+		love.event.quit()
+	end
+
 	-- testing purposes
 	if key == 'w' then
 		passed = true
@@ -444,7 +452,7 @@ end
 -- mouse clicking
 function love.mousepressed(x,y,button,istouch)
 	-- allows player to pick starting landmass
-	if button == 1 and ((level >= 3 and level < 22) or level == 23) and picked_landmass == false then
+	if button == 1 and ((level >= 3 and level <= #brown_pos_x - 2) or level == #brown_pos_x) and picked_landmass == false then
 		for r = 1,#brown_pos_x[level] do
 			if x >= brown_pos_x[level][r] + 5 and x <= brown_pos_x[level][r] + brown_dimen[level][r][1] - 5 
 			and y >= brown_pos_y[level][r] + 5 and y <= brown_pos_y[level][r] + brown_dimen[level][r][2] - 5
@@ -459,7 +467,7 @@ function love.mousepressed(x,y,button,istouch)
 	end
 
 	-- tap on bridges only after starting landmass is picked
-	if button == 1 and ((level >= 3 and level < 22) or level == 23) and picked_landmass then
+	if button == 1 and ((level >= 3 and level <= #brown_pos_x - 2) or level == #brown_pos_x) and picked_landmass then
 		-- match bridge with area player taps on
 		for d = 1,#rail_pos_x[level] do
 			if x > rail_pos_x[level][d] and x < rail_pos_x[level][d] + rail_dimen[level][d][1]
@@ -549,7 +557,7 @@ function love.mousepressed(x,y,button,istouch)
 	end
 
 	-- breaking the bridges
-	if level == 22 and button == 1 then
+	if button == 1 and level == #brown_pos_x - 1 then
 		if x > rail_pos_x[level][3] + 5 and x < rail_pos_x[level][3] + rail_dimen[level][3][1] - 5
 		and y > rail_pos_y[level][3] and y < rail_pos_y[level][3] + rail_dimen[level][3][2]
 		then

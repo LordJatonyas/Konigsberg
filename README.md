@@ -1,5 +1,5 @@
 # Konigs-Bridge
-A 2D puzzle game inspired by Euler's "Seven Bridges of Konigsberg" thought experiment. (NOT QUITE DONE YET!)
+A 2D puzzle game inspired by Euler's "Seven Bridges of Konigsberg" thought experiment.
 
 To run the game, you'll need:
 1) LÖVE2D Game Engine Application
