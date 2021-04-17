@@ -75,7 +75,7 @@ function love.load()
 	{{384,120},{384,120},{114,120},{504,120},{114,120},{384,120},{384,120}},
 	{{384,180},{144,216},{144,216},{144,216},{144,216}},
 	{{96,120},{360,120},{276,120},{360,160},{324,192},{96,120},{216,120}},
-	{{432,72},{120,360},{360,360},{120,384},{288,72}},
+	{{432,72},{120,384},{360,360},{120,384},{288,72}},
 	{{300,240},{300,240},{912,144},{912,144}},
 	{{300,240},{300,240},{912,144},{912,144}}
 	}
@@ -169,6 +169,8 @@ function love.load()
 	start_pos = {}
 	glow_dimen = {}
 	bridge_counter = #rail_pos_x[start_level]
+	rail_dimen_cp = {}
+	for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
 
 	-- timers
 	enforced_start_timer = 1
@@ -248,6 +250,8 @@ function love.update(dt)
 		level_prep_timer = 2
 		level_timer = 1
 		picked_landmass = false
+		rail_dimen_cp = {}
+		for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
 		start_pos = {}
 		glow_dimen = {}
 		bridge_counter = #rail_pos_x[level]
@@ -313,22 +317,22 @@ function love.draw()
 	-- bridges
 	for a = 1,#rail_pos_x[level] do
 		-- horizontal bridges
-		if rail_dimen[level][a][2] == 72 then
+		if rail_dimen_cp[a][2] == 72 then
 			--railings
 			love.graphics.setColor(0.4,0.4,0.4)
-			love.graphics.rectangle("fill",rail_pos_x[level][a],rail_pos_y[level][a],rail_dimen[level][a][1],rail_dimen[level][a][2])
+			love.graphics.rectangle("fill",rail_pos_x[level][a],rail_pos_y[level][a],rail_dimen_cp[a][1],rail_dimen_cp[a][2])
 			-- roads
 			love.graphics.setColor(0.1,0.1,0.1)
-			love.graphics.rectangle("fill",rail_pos_x[level][a],rail_pos_y[level][a] + 5,rail_dimen[level][a][1],rail_dimen[level][a][2] - 10)
+			love.graphics.rectangle("fill",rail_pos_x[level][a],rail_pos_y[level][a] + 5,rail_dimen_cp[a][1],rail_dimen_cp[a][2] - 10)
 
 		-- vertical bridges
-		elseif rail_dimen[level][a][1] == 72 then
+		elseif rail_dimen_cp[a][1] == 72 then
 			-- railings
 			love.graphics.setColor(0.4,0.4,0.4)
-			love.graphics.rectangle("fill",rail_pos_x[level][a],rail_pos_y[level][a],rail_dimen[level][a][1],rail_dimen[level][a][2])
+			love.graphics.rectangle("fill",rail_pos_x[level][a],rail_pos_y[level][a],rail_dimen_cp[a][1],rail_dimen_cp[a][2])
 			-- roads
 			love.graphics.setColor(0.1,0.1,0.1)
-			love.graphics.rectangle("fill",rail_pos_x[level][a] + 5,rail_pos_y[level][a],rail_dimen[level][a][1] - 10,rail_dimen[level][a][2])
+			love.graphics.rectangle("fill",rail_pos_x[level][a] + 5,rail_pos_y[level][a],rail_dimen_cp[a][1] - 10,rail_dimen_cp[a][2])
 		end
 	end
 
@@ -380,13 +384,27 @@ function love.keypressed(key,scancode,isrepeat)
 			enforced_start_timer = 3
 			start_timer = 1
 			level = level + 1
+			rail_dimen_cp = {}
+			for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
 			passed = false
 			
 		-- Unlock final level
 		elseif level == sbok and unlocked then
 			level = level + 1
-			bridge_counter = 5
+			bridge_counter = #rail_pos_x[level]
+			rail_dimen_cp = {}
+			for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
 		end
+	end
+
+	-- retrying levels
+	if key == "backspace" and ((level >= start_level and level < sbok) or level == last_level) then
+		rail_dimen_cp = {}
+		for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
+		bridge_counter = #rail_pos_x[level]
+		picked_landmass = false
+		start_pos = {}
+		glow_dimen = {}
 	end
 	
 	-- quit game
@@ -420,41 +438,41 @@ function love.mousepressed(x,y,button,istouch)
 	if button == 1 and ((level >= start_level and level < sbok) or level == last_level) and picked_landmass then
 		-- match bridge with area player taps on
 		for d = 1,#rail_pos_x[level] do
-			if x > rail_pos_x[level][d] and x < rail_pos_x[level][d] + rail_dimen[level][d][1]
-			and y > rail_pos_y[level][d] and y < rail_pos_y[level][d] + rail_dimen[level][d][2]
+			if x > rail_pos_x[level][d] and x < rail_pos_x[level][d] + rail_dimen_cp[d][1]
+			and y > rail_pos_y[level][d] and y < rail_pos_y[level][d] + rail_dimen_cp[d][2]
 			then
 				-- if bridge is horizontal
-				if rail_dimen[level][d][1] ~= 72 and rail_dimen[level][d][2] == 72
+				if rail_dimen_cp[d][1] ~= 72 and rail_dimen_cp[d][2] == 72
 				-- check if starting and ending y coordinates of the bridge lie within the highlighted landmass
-				and rail_pos_y[level][d] > start_pos[2] and rail_pos_y[level][d] + rail_dimen[level][d][2] < start_pos[2] + glow_dimen[2] then
+				and rail_pos_y[level][d] > start_pos[2] and rail_pos_y[level][d] + rail_dimen_cp[d][2] < start_pos[2] + glow_dimen[2] then
 
 					-- check if starting x coordinate of bridge lies within highlighted landmass
 					if rail_pos_x[level][d] == start_pos[1] + glow_dimen[1] then
 						
 						-- if it lies within highlighted landmass, highlight the landmass at the end of the bridge
 						for e = 1,#brown_pos_x[level] do
-							if rail_pos_x[level][d] + rail_dimen[level][d][1] == brown_pos_x[level][e]
+							if rail_pos_x[level][d] + rail_dimen_cp[d][1] == brown_pos_x[level][e]
 							and rail_pos_y[level][d] > brown_pos_y[level][e]
-							and rail_pos_y[level][d] + rail_dimen[level][d][2] < brown_pos_y[level][e] + brown_dimen[level][e][2]
+							and rail_pos_y[level][d] + rail_dimen_cp[d][2] < brown_pos_y[level][e] + brown_dimen[level][e][2]
 							then
 								start_pos = {brown_pos_x[level][e],brown_pos_y[level][e]}
 								glow_dimen = {brown_dimen[level][e][1],brown_dimen[level][e][2]}
-								rail_dimen[level][d] = {0,0}
+								rail_dimen_cp[d] = {0,0}
 								bridge_counter = bridge_counter - 1
 								break
 							end
 						end
 
 					-- if starting x coordinate doesn't lie within the highlighted landmass, highlight the landmass at the start of the bridge
-					elseif rail_pos_x[level][d] + rail_dimen[level][d][1] == start_pos[1] then
+					elseif rail_pos_x[level][d] + rail_dimen_cp[d][1] == start_pos[1] then
 						for f = 1,#brown_pos_x[level] do
 							if rail_pos_x[level][d] == brown_pos_x[level][f] + brown_dimen[level][f][1]
 							and rail_pos_y[level][d] > brown_pos_y[level][f]
-							and rail_pos_y[level][d] + rail_dimen[level][d][2] < brown_pos_y[level][f] + brown_dimen[level][f][2]
+							and rail_pos_y[level][d] + rail_dimen_cp[d][2] < brown_pos_y[level][f] + brown_dimen[level][f][2]
 							then
 								start_pos = {brown_pos_x[level][f],brown_pos_y[level][f]}
 								glow_dimen = {brown_dimen[level][f][1],brown_dimen[level][f][2]}
-								rail_dimen[level][d] = {0,0}
+								rail_dimen_cp[d] = {0,0}
 								bridge_counter = bridge_counter - 1
 								break
 							end
@@ -462,36 +480,36 @@ function love.mousepressed(x,y,button,istouch)
 					end
 
 				-- if bridge is vertical
-				elseif rail_dimen[level][d][1] == 72 and rail_dimen[level][d][2] ~= 72
+				elseif rail_dimen_cp[d][1] == 72 and rail_dimen_cp[d][2] ~= 72
 				-- check if x starting and ending x coordinates of bridge lies within the highlighted landmass
-				and rail_pos_x[level][d] > start_pos[1] and rail_pos_x[level][d] + rail_dimen[level][d][1] < start_pos[1] + glow_dimen[1] then
+				and rail_pos_x[level][d] > start_pos[1] and rail_pos_x[level][d] + rail_dimen_cp[d][1] < start_pos[1] + glow_dimen[1] then
 
 					-- check if starting y coordinate of bridge lies within highlighted landmass
 					if rail_pos_y[level][d] == start_pos[2] + glow_dimen[2] then
 						-- if it lies within highlighted landmass, highlight the landmass at the end of the bridge
 						for e = 1,#brown_pos_y[level] do
-							if rail_pos_y[level][d] + rail_dimen[level][d][2] == brown_pos_y[level][e]
+							if rail_pos_y[level][d] + rail_dimen_cp[d][2] == brown_pos_y[level][e]
 							and rail_pos_x[level][d] > brown_pos_x[level][e]
-							and rail_pos_x[level][d] + rail_dimen[level][d][1] < brown_pos_x[level][e] + brown_dimen[level][e][1]
+							and rail_pos_x[level][d] + rail_dimen_cp[d][1] < brown_pos_x[level][e] + brown_dimen[level][e][1]
 							then
 								start_pos = {brown_pos_x[level][e],brown_pos_y[level][e]}
 								glow_dimen = {brown_dimen[level][e][1],brown_dimen[level][e][2]}
-								rail_dimen[level][d] = {0,0}
+								rail_dimen_cp[d] = {0,0}
 								bridge_counter = bridge_counter - 1
 								break
 							end
 						end
 
 					-- if the starting y coordinate doesn't lie within the highlighted landmass, highlight the landmass at the start of the bridge
-					elseif rail_pos_y[level][d] + rail_dimen[level][d][2] == start_pos[2] then
+					elseif rail_pos_y[level][d] + rail_dimen_cp[d][2] == start_pos[2] then
 						for f = 1,#brown_pos_y[level] do
 							if rail_pos_y[level][d] == brown_pos_y[level][f] + brown_dimen[level][f][2]
 							and rail_pos_x[level][d] > brown_pos_x[level][f]
-							and rail_pos_x[level][d] + rail_dimen[level][d][1] < brown_pos_x[level][f] + brown_dimen[level][f][1]
+							and rail_pos_x[level][d] + rail_dimen_cp[d][1] < brown_pos_x[level][f] + brown_dimen[level][f][1]
 							then
 								start_pos = {brown_pos_x[level][f],brown_pos_y[level][f]}
 								glow_dimen = {brown_dimen[level][f][1],brown_dimen[level][f][2]}
-								rail_dimen[level][d] = {0,0}
+								rail_dimen_cp[d] = {0,0}
 								bridge_counter = bridge_counter - 1
 								break
 							end
@@ -504,13 +522,13 @@ function love.mousepressed(x,y,button,istouch)
 
 	-- breaking the bridges
 	if button == 1 and level == sbok then
-		if x > rail_pos_x[level][3] + 5 and x < rail_pos_x[level][3] + rail_dimen[level][3][1] - 5
-		and y > rail_pos_y[level][3] and y < rail_pos_y[level][3] + rail_dimen[level][3][2]
+		if x > rail_pos_x[level][3] + 5 and x < rail_pos_x[level][3] + rail_dimen_cp[3][1] - 5
+		and y > rail_pos_y[level][3] and y < rail_pos_y[level][3] + rail_dimen_cp[3][2]
 		then
 			break1 = true
 		end
-		if x > rail_pos_x[level][4] + 5 and x < rail_pos_x[level][4] + rail_dimen[level][4][1] - 5
-		and y > rail_pos_y[level][4] and y < rail_pos_y[level][4] + rail_dimen[level][4][2]
+		if x > rail_pos_x[level][4] + 5 and x < rail_pos_x[level][4] + rail_dimen_cp[4][1] - 5
+		and y > rail_pos_y[level][4] and y < rail_pos_y[level][4] + rail_dimen_cp[4][2]
 		then
 			break2 = true
 		end
