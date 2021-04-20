@@ -46,7 +46,7 @@ function love.load()
 	{240,360,240,300,24,576},
 	{300,36,300,564,240,36,240,564},
 	{24,24,252,252,564,564,252,252},
-	{12,12,300,300,300,588,588},
+	{50,50,300,300,300,550,550},
 	{48,428,428,428,428},
 	{24,24,24,300,264,300,576},
 	{24,168,180,168,624},
@@ -125,7 +125,7 @@ function love.load()
 	{264,384,384,480,480,144,144,324},
 	{324,156,420,60,324,588,264,384,156,480},
 	{48,144,144,468,468,468,600,264,384,264,384},
-	{36,132,132,132,132,132,324,324,420,420,420,420,420,420,612},
+	{74,170,170,170,170,170,324,324,420,420,420,420,420,420,574},
 	{228,228,440,560,440,560,440,560},
 	{48,48,144,144,144,144,144,144,324,324,456,456},
 	{96,96,96,198,282,366,450,216,324,432,540,540},
@@ -151,7 +151,7 @@ function love.load()
 	{{312,72},{96,72},{96,72},{72,96},{72,96},{72,96},{72,96},{96,72}},
 	{{84,72},{72,144},{72,144},{372,72},{84,72},{372,72},{144,72},{144,72},{72,84},{72,84}},
 	{{144,72},{72,108},{72,108},{72,96},{72,96},{72,96},{96,72},{120,72},{120,72},{120,72},{120,72}},
-	{{144,72},{72,168},{72,168},{72,168},{72,168},{72,168},{108,72},{108,72},{72,168},{72,168},{72,168},{72,168},{72,168},{72,168},{144,72}},
+	{{144,72},{72,130},{72,130},{72,130},{72,130},{72,130},{108,72},{108,72},{72,130},{72,130},{72,130},{72,130},{72,130},{72,130},{144,72}},
 	{{72,200},{72,200},{120,72},{120,72},{120,72},{120,72},{120,72},{120,72}},
 	{{84,72},{132,72},{72,156},{72,156},{72,156},{72,120},{72,120},{72,156},{84,72},{84,72},{72,120},{72,120}},
 	{{72,84},{72,84},{72,84},{144,72},{144,72},{144,72},{144,72},{144,72},{144,72},{144,72},{72,84},{72,84}},
@@ -242,7 +242,7 @@ function love.update(dt)
 
 	-- timer for going onto next level
 	if level_prep_timer > 0 and passed then
-		level_prep_timer = level_prep_timer - dt
+		level_prep_timer = level_prep_timer - 1.5 * dt
 	end
 	-- decision for progressing to next level
 	if level >= start_level and level < sbok and level_prep_timer <= 0 and passed then
@@ -262,6 +262,22 @@ function love.update(dt)
 	-- that final level
 	if break1 and break2 then
 		unlocked = true
+	end
+
+	-- bring player back to start after winning
+	if level == #brown_pos_x and level_prep_timer <= 0 and passed then
+		level = 1
+		bridge_counter = 3
+		rail_dimen_cp = {}
+		for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
+		enforced_start_timer = 1
+		level_timer = 1
+		level_prep_timer = 2
+		passed = false
+		picked_landmass = false
+		break1 = false
+		break2 = false
+		unlocked = false
 	end
 end
 
@@ -298,11 +314,11 @@ function love.draw()
 	
 		love.graphics.printf("- Tap on a landmass to pick your starting position at the start of each level",90,180,840,'left')
 
-		love.graphics.printf("- Tap on a bridge to cross it",90,270,840,'left')
+		love.graphics.printf("- Tap on a bridge to cross it",90,290,840,'left')
 
-		love.graphics.printf("- You can't cross a bridge that has already been crossed",90,330,840,'left')
+		love.graphics.printf("- You can't cross a bridge that has already been crossed",90,360,840,'left')
 
-		love.graphics.printf("- Win by crossing all bridges",90,450,840,'left')
+		love.graphics.printf("- Win by crossing all bridges",90,470,840,'left')
 
 		love.graphics.printf("- Press Backspace to retry a level",90,540,840,'left')
 	
@@ -391,6 +407,7 @@ function love.keypressed(key,scancode,isrepeat)
 		-- Unlock final level
 		elseif level == sbok and unlocked then
 			level = level + 1
+			level_prep_timer = 2
 			bridge_counter = #rail_pos_x[level]
 			rail_dimen_cp = {}
 			for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
@@ -406,16 +423,24 @@ function love.keypressed(key,scancode,isrepeat)
 		start_pos = {}
 		glow_dimen = {}
 	end
-	
+
+	--[[ option to return to menu
+	if key == 'm' then
+		level = 1
+		rail_dimen_cp = {}
+		for i=1,#rail_dimen[level] do table.insert(rail_dimen_cp,rail_dimen[level][i]) end
+		enforced_start_timer = 1
+	end]]
+
 	-- quit game
 	if key == 'escape' then
 		love.event.quit()
 	end
 
-	--[[ testing purposes
+	-- testing purposes
 	if key == 'w' then
 		passed = true
-	end]]
+	end
 end
 
 -- mouse clicking
