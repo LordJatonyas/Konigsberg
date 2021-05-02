@@ -1,13 +1,14 @@
 function love.conf(t)
     t.console = false                   -- Attach a console (boolean, Windows only)
 
-    t.window.title = "Konig's Bridge"   -- The window title (string)
+    t.window.title = "Konigsberg"   -- The window title (string)
     t.window.width = 960                -- The window width (number)
     t.window.height = 720               -- The window height (number)
     t.window.borderless = false         -- Remove all border visuals from the window (boolean)
     t.window.resizable = false          -- Let the window be user-resizable (boolean)
     t.window.minwidth = 960             -- Minimum window width if the window is resizable (number)
     t.window.minheight = 720            -- Minimum window height if the window is resizable (number)
+    t.window.display = 1		        -- Index of the monitor to show the window in (number)
 
     t.modules.audio = true              -- Enable the audio module (boolean)
     t.modules.data = false              -- Enable the data module (boolean)

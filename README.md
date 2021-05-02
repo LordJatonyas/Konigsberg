@@ -1,9 +1,12 @@
-# Königs Bridge
-A 2D puzzle game inspired by Euler's "Seven Bridges of Königsberg" thought experiment. You'll have to cross every bridge just once in each level. The final level requires you to know a bit of history about the famous problem, and the challenge is to complete the game in 1 go. Have Fun!
+# Konigsberg
+A 2D puzzle game inspired by Euler's "Seven Bridges of Königsberg" thought experiment.
 
-To run the game, you'll have to download LÖVE2D on your computer. After that, there are 2 ways to run it:
-1) Simply drag the "source" folder into the LÖVE2D application
-2) If you run Linux/MacOS, go to the terminal and from the "source" folder's parent directory, run
-```javascript
-love source
-```
+## Build Status
+The game is incomplete. I will be adding several features to the game:
+
+1) Addition of 3 "Decks" to the game, each "Deck" consisting of 8 levels
+2) Addition of a proper tutorial
+3) Making the final level a stand-alone option
+4) Addition of new sounds
+
+Once completed, I will provide instructions for running the game on your very own machine.
