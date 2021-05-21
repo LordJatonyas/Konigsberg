@@ -14,7 +14,7 @@ function love.load()
 	
 	-- game states
 	gameState = 0 -- 0 refers to menu, 1 refers to options
-	optionState = 1 -- this determines which option to focus on
+	opState = 1 -- this determines which option to focus on
 	
 	-- gameplay timers
 	prep_lvl_timer = 1
@@ -50,25 +50,25 @@ function love.update(dt)
 	
 	-- make options flash
 	if gameState == 0 then
-		if option_fade_timer < 1 then option_fade_timer = option_fade_timer + 1/2*dt end
+		if option_fade_timer < 1 then option_fade_timer = option_fade_timer + dt end
 		if option_fade_timer > 1 then option_fade_timer = 1 end
 	end
 
 	-- for options
 	if gameState == 1 then
 		
-		if optionState <= 5 and picked_landmass == false then
+		if opState <= 5 and picked_landmass == false then
 			-- make a copy of the bridge dimensions
 			rdc = {}
-			for s = 1,#options[optionState]['rd'][lvl] do
-				table.insert(rdc,options[optionState]['rd'][lvl][s])
+			for s = 1,#options[opState]['rd'][lvl] do
+				table.insert(rdc,options[opState]['rd'][lvl][s])
 			end
 			bridge_count = #rdc
 			draw = true
 		end
 	
 		-- for playable levels
-		if optionState <= 3 then
+		if opState <= 3 then
 			-- if you pass
 			if bridge_count == 0 then
 				-- wait a while before automatically moving onto next level
@@ -83,7 +83,7 @@ function love.update(dt)
 					start_dimen = {}
 					prep_lvl_timer = 1
 					lvl_indicator_timer = 1
-					if lvl ~= #options[optionState]['bpx'] then
+					if lvl ~= #options[opState]['bpx'] then
 						lvl = lvl + 1
 					-- if you passed the final level, go back to menu
 					else
@@ -160,32 +160,32 @@ function love.draw()
 
 	-- draw the options
 	elseif gameState == 1 then
-		if optionState <= 5 and draw then
+		if opState <= 5 and draw then
 	
 			-- bridges
-			for i = 1,#options[optionState]['rpx'][lvl] do
+			for i = 1,#options[opState]['rpx'][lvl] do
 				-- railings
 				love.graphics.setColor(0.4,0.4,0.4)
-				love.graphics.rectangle("fill",options[optionState]['rpx'][lvl][i],options[optionState]['rpy'][lvl][i],rdc[i][1],rdc[i][2])
+				love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i],options[opState]['rpy'][lvl][i],rdc[i][1],rdc[i][2])
 				-- roads, drawn depending on the bridge's orientation
 				love.graphics.setColor(0.1,0.1,0.1)
 				-- horizontal bridges
 				if rdc[i][2] == 72 then
-					love.graphics.rectangle("fill",options[optionState]['rpx'][lvl][i],options[optionState]['rpy'][lvl][i] + 5,rdc[i][1],rdc[i][2] - 10)
+					love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i],options[opState]['rpy'][lvl][i] + 5,rdc[i][1],rdc[i][2] - 10)
 				-- vertical bridges
 				elseif rdc[i][1] == 72 then
-					love.graphics.rectangle("fill",options[optionState]['rpx'][lvl][i] + 5,options[optionState]['rpy'][lvl][i],rdc[i][1] - 10,rdc[i][2])
+					love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i] + 5,options[opState]['rpy'][lvl][i],rdc[i][1] - 10,rdc[i][2])
 				end
 			end
 			
 			-- landmasses
-			for j = 1,#options[optionState]['bpx'][lvl] do
+			for j = 1,#options[opState]['bpx'][lvl] do
 				-- brown landmasses
 				love.graphics.setColor(0.18,0.16,0.12)
-				love.graphics.rectangle("fill",options[optionState]['bpx'][lvl][j],options[optionState]['bpy'][lvl][j],options[optionState]['bd'][lvl][j][1],options[optionState]['bd'][lvl][j][2])
+				love.graphics.rectangle("fill",options[opState]['bpx'][lvl][j],options[opState]['bpy'][lvl][j],options[opState]['bd'][lvl][j][1],options[opState]['bd'][lvl][j][2])
 				-- green landmasses
 				love.graphics.setColor(0.2,0.4,0.1)
-				love.graphics.rectangle("fill",options[optionState]['bpx'][lvl][j] + 5,options[optionState]['bpy'][lvl][j] + 5,options[optionState]['bd'][lvl][j][1] - 10,options[optionState]['bd'][lvl][j][2] - 10)
+				love.graphics.rectangle("fill",options[opState]['bpx'][lvl][j] + 5,options[opState]['bpy'][lvl][j] + 5,options[opState]['bd'][lvl][j][1] - 10,options[opState]['bd'][lvl][j][2] - 10)
 			end
 			
 			-- highlight starting landmass
@@ -197,7 +197,7 @@ function love.draw()
 			drawn = true -- change the boolean after map features are drawn
 
 			-- stuff specifically for decks
-			if optionState <= 3 then
+			if opState <= 3 then
 				love.graphics.setColor(1,1,1)
 
 				-- lives indicator
@@ -207,7 +207,7 @@ function love.draw()
 				love.graphics.setFont(mediumFont)
 				-- if complete, represent the number of completed levels as a fraction
 				if bridge_count == 0 then
-					love.graphics.printf(tostring(lvl).."/"..tostring(#options[optionState]['bpx']),380,320,200,'center')
+					love.graphics.printf(tostring(lvl).."/"..tostring(#options[opState]['bpx']),380,320,200,'center')
 				-- retry if fail
 				elseif lives == 0 then
 					love.graphics.printf(":(",430,320,100,'center')
@@ -220,14 +220,14 @@ function love.draw()
 				end
 
 			-- tutorial stuff
-			elseif optionState == 4 then
+			elseif opState == 4 then
 
 			-- history lesson
-			elseif optionState == 5 then
+			elseif opState == 5 then
 			end
 
 		-- credits page
-		elseif optionState == 6 then
+		elseif opState == 6 then
 			love.graphics.setColor(1,1,1)
 			-- thank you
 			love.graphics.setFont(largeFont)
@@ -247,13 +247,15 @@ end
 -- logic for incrementing level number
 function love.keypressed(key,scancode,isrepeat)
 	-- retry
-	if key == 'backspace' and gameState == 1 and lives > 0 then
-		picked_landmass = false
-		rdc = {}
-		for s = 1,#options[optionState]['rd'][lvl] do
-			table.insert(rdc,options[optionState]['rd'][lvl][s])
+	if key == 'backspace' and gameState == 1 and picked_landmass and bridge_count ~= 0 and lives > 0 then
+		if lives > 1 then
+			picked_landmass = false
+			rdc = {}
+			for s = 1,#options[opState]['rd'][lvl] do
+				table.insert(rdc,options[opState]['rd'][lvl][s])
+			end
+			bridge_count = #rdc
 		end
-		bridge_count = #rdc
 		lives = lives - 1
 	end	
 
@@ -282,7 +284,7 @@ function love.mousepressed(x,y,button,istouch)
 		for a = 1,#menu['opx'] do
 			if x >= menu['opx'][a] + 5 and x <= menu['opx'][a] + menu['od'][a][1] - 5
 			and y >= menu['opy'][a] + 5 and y <= menu['opy'][a] + menu['od'][a][2] - 5 then
-				optionState = a
+				opState = a
 				gameState = 1
 				break
 			end
@@ -292,47 +294,47 @@ function love.mousepressed(x,y,button,istouch)
 	-- gameplay mechanics for Decks
 	
 	-- picking starting landmass only after map features are drawn
-	if gameState == 1 and optionState <= 5 and picked_landmass == false and drawn and lives > 0 and button == 1 then
-		for r = 1,#options[optionState]['bpx'][lvl] do
-			if x >= options[optionState]['bpx'][lvl][r] + 5 and x <= options[optionState]['bpx'][lvl][r] + options[optionState]['bd'][lvl][r][1] - 5
-			and y >= options[optionState]['bpy'][lvl][r] + 5 and y <= options[optionState]['bpy'][lvl][r] + options[optionState]['bd'][lvl][r][2] - 5 then
-				start_position = {options[optionState]['bpx'][lvl][r],options[optionState]['bpy'][lvl][r]}
-				start_dimen = {options[optionState]['bd'][lvl][r][1],options[optionState]['bd'][lvl][r][2]}
+	if gameState == 1 and opState <= 5 and picked_landmass == false and drawn and lives > 0 and button == 1 then
+		for r = 1,#options[opState]['bpx'][lvl] do
+			if x >= options[opState]['bpx'][lvl][r] + 5 and x <= options[opState]['bpx'][lvl][r] + options[opState]['bd'][lvl][r][1] - 5
+			and y >= options[opState]['bpy'][lvl][r] + 5 and y <= options[opState]['bpy'][lvl][r] + options[opState]['bd'][lvl][r][2] - 5 then
+				start_position = {options[opState]['bpx'][lvl][r],options[opState]['bpy'][lvl][r]}
+				start_dimen = {options[opState]['bd'][lvl][r][1],options[opState]['bd'][lvl][r][2]}
 				picked_landmass = true
 				break
 			end
 		end
 	end
 	-- selecting bridges and changing the highlighted landmass
-	if gameState == 1 and optionState <= 5 and picked_landmass and button == 1 then
-		for s = 1,#options[optionState]['rpx'][lvl] do
-			if x > options[optionState]['rpx'][lvl][s] and x < options[optionState]['rpx'][lvl][s] + rdc[s][1]
-			and y > options[optionState]['rpy'][lvl][s] and y < options[optionState]['rpy'][lvl][s] + rdc[s][2] then
+	if gameState == 1 and opState <= 5 and picked_landmass and button == 1 then
+		for s = 1,#options[opState]['rpx'][lvl] do
+			if x > options[opState]['rpx'][lvl][s] and x < options[opState]['rpx'][lvl][s] + rdc[s][1]
+			and y > options[opState]['rpy'][lvl][s] and y < options[opState]['rpy'][lvl][s] + rdc[s][2] then
 				-- horizontal bridge that has a starting y-coordinate within the highlighted landmass
-				if rdc[s][2] == 72 and options[optionState]['rpy'][lvl][s] > start_position[2] and options[optionState]['rpy'][lvl][s] < start_position[2]+start_dimen[2] then
+				if rdc[s][2] == 72 and options[opState]['rpy'][lvl][s] > start_position[2] and options[opState]['rpy'][lvl][s] < start_position[2]+start_dimen[2] then
 					-- check if starting x-coordinate of bridge lies on the end of the new landmass
-					if options[optionState]['rpx'][lvl][s] == start_position[1] + start_dimen[1] then
+					if options[opState]['rpx'][lvl][s] == start_position[1] + start_dimen[1] then
 						-- highlight the landmass at the end of the bridge
-						for t = 1,#options[optionState]['bpx'][lvl] do
-							if options[optionState]['rpx'][lvl][s] + rdc[s][1] == options[optionState]['bpx'][lvl][t]
-							and options[optionState]['rpy'][lvl][s] > options[optionState]['bpy'][lvl][t]
-							and options[optionState]['rpy'][lvl][s] < options[optionState]['bpy'][lvl][t] + options[optionState]['bd'][lvl][t][2] then
-								start_position = {options[optionState]['bpx'][lvl][t],options[optionState]['bpy'][lvl][t]}
-								start_dimen = {options[optionState]['bd'][lvl][t][1],options[optionState]['bd'][lvl][t][2]}
+						for t = 1,#options[opState]['bpx'][lvl] do
+							if options[opState]['rpx'][lvl][s] + rdc[s][1] == options[opState]['bpx'][lvl][t]
+							and options[opState]['rpy'][lvl][s] > options[opState]['bpy'][lvl][t]
+							and options[opState]['rpy'][lvl][s] < options[opState]['bpy'][lvl][t] + options[opState]['bd'][lvl][t][2] then
+								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
+								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0} -- remove bridge once crossed
 								bridge_count = bridge_count - 1
 								break
 							end
 						end
 					-- check if ending x-coordinate of bridge lies on the start of the new landmass
-					elseif options[optionState]['rpx'][lvl][s] + rdc[s][1] == start_position[1] then
+					elseif options[opState]['rpx'][lvl][s] + rdc[s][1] == start_position[1] then
 						-- highlight the landmass at the start of the bridge
-						for t = 1,#options[optionState]['bpx'][lvl] do
-							if options[optionState]['rpx'][lvl][s] == options[optionState]['bpx'][lvl][t] + options[optionState]['bd'][lvl][t][1]
-							and options[optionState]['rpy'][lvl][s] > options[optionState]['bpy'][lvl][t]
-							and options[optionState]['rpy'][lvl][s] < options[optionState]['bpy'][lvl][t] + options[optionState]['bd'][lvl][t][2] then
-								start_position = {options[optionState]['bpx'][lvl][t],options[optionState]['bpy'][lvl][t]}
-								start_dimen = {options[optionState]['bd'][lvl][t][1],options[optionState]['bd'][lvl][t][2]}
+						for t = 1,#options[opState]['bpx'][lvl] do
+							if options[opState]['rpx'][lvl][s] == options[opState]['bpx'][lvl][t] + options[opState]['bd'][lvl][t][1]
+							and options[opState]['rpy'][lvl][s] > options[opState]['bpy'][lvl][t]
+							and options[opState]['rpy'][lvl][s] < options[opState]['bpy'][lvl][t] + options[opState]['bd'][lvl][t][2] then
+								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
+								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0}
 								bridge_count = bridge_count - 1
 								break
@@ -340,30 +342,30 @@ function love.mousepressed(x,y,button,istouch)
 						end
 					end
 				-- vertical bridge that has a starting x-coordinate within the highlighted landmass
-				elseif rdc[s][1] == 72 and options[optionState]['rpx'][lvl][s] > start_position[1] and options[optionState]['rpx'][lvl][s] < start_position[1] + start_dimen[1] then
+				elseif rdc[s][1] == 72 and options[opState]['rpx'][lvl][s] > start_position[1] and options[opState]['rpx'][lvl][s] < start_position[1] + start_dimen[1] then
 					-- check if starting y-coordinate of bridge lies on the end of the new landmass
-					if options[optionState]['rpy'][lvl][s] == start_position[2] + start_dimen[2] then
+					if options[opState]['rpy'][lvl][s] == start_position[2] + start_dimen[2] then
 						-- highlight the landmass at the end of the bridge
-						for t = 1,#options[optionState]['bpy'][lvl] do
-							if options[optionState]['rpy'][lvl][s] + rdc[s][2] == options[optionState]['bpy'][lvl][t]
-							and options[optionState]['rpx'][lvl][s] > options[optionState]['bpx'][lvl][t]
-							and options[optionState]['rpx'][lvl][s] < options[optionState]['bpx'][lvl][t] + options[optionState]['bd'][lvl][t][1] then
-								start_position = {options[optionState]['bpx'][lvl][t],options[optionState]['bpy'][lvl][t]}
-								start_dimen = {options[optionState]['bd'][lvl][t][1],options[optionState]['bd'][lvl][t][2]}
+						for t = 1,#options[opState]['bpy'][lvl] do
+							if options[opState]['rpy'][lvl][s] + rdc[s][2] == options[opState]['bpy'][lvl][t]
+							and options[opState]['rpx'][lvl][s] > options[opState]['bpx'][lvl][t]
+							and options[opState]['rpx'][lvl][s] < options[opState]['bpx'][lvl][t] + options[opState]['bd'][lvl][t][1] then
+								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
+								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0}
 								bridge_count = bridge_count - 1
 								break
 							end
 						end
 					-- check if ending y-coordinate of bridge lies on the start of the new landmass
-					elseif options[optionState]['rpy'][lvl][s] + rdc[s][2] == start_position[2] then
+					elseif options[opState]['rpy'][lvl][s] + rdc[s][2] == start_position[2] then
 						-- highlight the landmass at the start of the bridge
-						for t = 1,#options[optionState]['bpy'][lvl] do
-							if options[optionState]['rpy'][lvl][s] == options[optionState]['bpy'][lvl][t] + options[optionState]['bd'][lvl][t][2]
-							and options[optionState]['rpx'][lvl][s] > options[optionState]['bpx'][lvl][t]
-							and options[optionState]['rpx'][lvl][s] < options[optionState]['bpx'][lvl][t] + options[optionState]['bd'][lvl][t][1] then
-								start_position = {options[optionState]['bpx'][lvl][t],options[optionState]['bpy'][lvl][t]}
-								start_dimen = {options[optionState]['bd'][lvl][t][1],options[optionState]['bd'][lvl][t][2]}
+						for t = 1,#options[opState]['bpy'][lvl] do
+							if options[opState]['rpy'][lvl][s] == options[opState]['bpy'][lvl][t] + options[opState]['bd'][lvl][t][2]
+							and options[opState]['rpx'][lvl][s] > options[opState]['bpx'][lvl][t]
+							and options[opState]['rpx'][lvl][s] < options[opState]['bpx'][lvl][t] + options[opState]['bd'][lvl][t][1] then
+								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
+								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0}
 								bridge_count = bridge_count - 1
 								break
