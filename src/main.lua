@@ -1,6 +1,6 @@
 function love.load()
 	menu = require "menu"
-	
+
 	-- fit all options into an a table
 	deck1 = require "decks/deck1"
 	deck2 = require "decks/deck2"
@@ -8,9 +8,15 @@ function love.load()
 	tutorial = require "tutorial"
 	sbok = require "sbok"
 	options = {deck1,deck2,deck3,tutorial,sbok}
-
+	
 	-- fun menu stuff
 	option_fade_timer = 0
+	hover = false
+	hover_play = true
+	deck1_passed = false
+	deck2_passed = false
+	deck3_passed = false
+	reveal_secret = false
 	
 	-- game states
 	gameState = 0 -- 0 refers to menu, 1 refers to options
@@ -38,15 +44,21 @@ function love.load()
 	largeFont = love.graphics.newFont("font.ttf",72)
 	
 	-- sounds
-	sounds = {
-		['Clair De Lune'] = love.audio.newSource('sounds/ClairDeLune.wav','stream'),
-		-- ['Picked/Moved Landmass'] = love.audio.newSource('sounds/Bloop.wav','static'),
-	}
+	ClairDeLune = love.audio.newSource('sounds/ClairDeLune.wav','stream')
+	click_sound = love.audio.newSource('sounds/click.wav','static')
+	landmass_sound = love.audio.newSource('sounds/landmass.wav','static')
+	replay_sound = love.audio.newSource('sounds/replay.wav','static')
+	-- ['Picked/Moved Landmass'] = love.audio.newSource('sounds/Bloop.wav','static'),
 end
 
+
 function love.update(dt)
+
 	-- play theme music throughout
-	sounds['Clair De Lune']:play()
+	ClairDeLune:play()
+	
+	-- get mouse position
+	mousex,mousey = love.mouse.getPosition()
 	
 	-- make options flash
 	if gameState == 0 then
@@ -57,7 +69,7 @@ function love.update(dt)
 	-- for options
 	if gameState == 1 then
 		
-		if opState <= 5 and picked_landmass == false then
+		if opState <= 5 and not picked_landmass then
 			-- make a copy of the bridge dimensions
 			rdc = {}
 			for s = 1,#options[opState]['rd'][lvl] do
@@ -87,6 +99,9 @@ function love.update(dt)
 						lvl = lvl + 1
 					-- if you passed the final level, go back to menu
 					else
+						if opState == 1 then deck1_passed = true
+						elseif opState == 2 then deck2_passed = true
+						else deck3_passed = true end
 						gameState = 0
 						lvl = 1
 						option_fade_timer = 0
@@ -96,19 +111,23 @@ function love.update(dt)
 			elseif lvl_indicator_timer > 0 then lvl_indicator_timer = lvl_indicator_timer - 2/3*dt end
 		end
 	end
+
+	-- pass all levels and there's a secret in SBOK
+	if deck1_passed and deck2_passed and deck3_passed then reveal_secret = true end
 end
+
 
 function love.draw()
 	-- check memory usage
 	love.graphics.setFont(tinyFont)
 	love.graphics.setColor(0.1,0.15,0.32)
 	love.graphics.print(collectgarbage('count'),10,10)
+
 	-- constant background colour (deep sea blue)
 	love.graphics.setBackgroundColor(0.1,0.15,0.32)
 	
 	-- draw the menu
 	if gameState == 0 then
-		
 		-- bridges
 		for a = 1,#menu['rpx'] do
 			-- railings
@@ -124,7 +143,6 @@ function love.draw()
 				love.graphics.rectangle("fill",menu['rpx'][a] + 5,menu['rpy'][a],menu['rd'][a][1] - 10,menu['rd'][a][2])
 			end
 		end
-		
 		-- landmasses
 		for b = 1,#menu['bpx'] do
 			-- brown landmasses
@@ -134,16 +152,23 @@ function love.draw()
 			love.graphics.setColor(0.2,0.4,0.1)
 			love.graphics.rectangle("fill",menu['bpx'][b] + 5,menu['bpy'][b] + 5,menu['bd'][b][1] - 10,menu['bd'][b][2] - 10)
 		end
-
 		-- icons for options
 		for c = 1,#menu['opx'] do
 			-- white base for options
 			love.graphics.setColor(0.7,0.7,0.7,option_fade_timer)
 			love.graphics.rectangle("fill",menu['opx'][c],menu['opy'][c],menu['od'][c][1],menu['od'][c][2])
-			-- grey base for options
-			love.graphics.setColor(0.4,0.4,0.4,option_fade_timer)
+			-- grey base for options (brightness depends on position of the cursor)
+			hover = mousex > menu['opx'][c] + 5 and mousex < menu['opx'][c] + menu['od'][c][1] - 5 and
+				  mousey > menu['opy'][c] + 5 and mousey < menu['opy'][c] + menu['od'][c][2] - 5
+			if hover then love.graphics.setColor(0.6,0.6,0.6,option_fade_timer)
+			else love.graphics.setColor(0.4,0.4,0.4,option_fade_timer) end
 			love.graphics.rectangle("fill",menu['opx'][c] + 5,menu['opy'][c] + 5,menu['od'][c][1] - 10,menu['od'][c][2] - 10)
 		end
+		-- green lights if players clears deck
+		love.graphics.setColor(0.1,0.7,0.2,option_fade_timer)
+		if deck1_passed then love.graphics.rectangle("fill",menu['opx'][1] - 50,menu['opy'][1] + 30,20,20) end
+		if deck2_passed then love.graphics.rectangle("fill",menu['opx'][2] - 50,menu['opy'][2] + 30,20,20) end
+		if deck3_passed then love.graphics.rectangle("fill",menu['opx'][3] - 50,menu['opy'][3] + 30,20,20) end
 		-- title
 		love.graphics.setColor(1,1,1)
 		love.graphics.setFont(largeFont)
@@ -158,51 +183,58 @@ function love.draw()
 		love.graphics.printf("SBOK",menu['opx'][5] + 10,menu['opy'][5] + 12,menu['od'][5][1],'center')
 		love.graphics.printf("Credits",menu['opx'][6] + 10,menu['opy'][6] + 12,menu['od'][6][1],'center')
 
-	-- draw the options
+	-- draw levels within the options
 	elseif gameState == 1 then
+
+		-- playable levels
 		if opState <= 5 and draw then
-	
 			-- bridges
 			for i = 1,#options[opState]['rpx'][lvl] do
 				-- railings
 				love.graphics.setColor(0.4,0.4,0.4)
-				love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i],options[opState]['rpy'][lvl][i],rdc[i][1],rdc[i][2])
+				love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i],
+				options[opState]['rpy'][lvl][i],rdc[i][1],rdc[i][2])
 				-- roads, drawn depending on the bridge's orientation
 				love.graphics.setColor(0.1,0.1,0.1)
 				-- horizontal bridges
 				if rdc[i][2] == 72 then
-					love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i],options[opState]['rpy'][lvl][i] + 5,rdc[i][1],rdc[i][2] - 10)
+					love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i],
+					options[opState]['rpy'][lvl][i] + 5,rdc[i][1],rdc[i][2] - 10)
 				-- vertical bridges
 				elseif rdc[i][1] == 72 then
-					love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i] + 5,options[opState]['rpy'][lvl][i],rdc[i][1] - 10,rdc[i][2])
+					love.graphics.rectangle("fill",options[opState]['rpx'][lvl][i] + 5,
+					options[opState]['rpy'][lvl][i],rdc[i][1] - 10,rdc[i][2])
 				end
 			end
-			
 			-- landmasses
 			for j = 1,#options[opState]['bpx'][lvl] do
 				-- brown landmasses
 				love.graphics.setColor(0.18,0.16,0.12)
-				love.graphics.rectangle("fill",options[opState]['bpx'][lvl][j],options[opState]['bpy'][lvl][j],options[opState]['bd'][lvl][j][1],options[opState]['bd'][lvl][j][2])
+				love.graphics.rectangle("fill",options[opState]['bpx'][lvl][j],
+				options[opState]['bpy'][lvl][j],options[opState]['bd'][lvl][j][1],options[opState]['bd'][lvl][j][2])
 				-- green landmasses
 				love.graphics.setColor(0.2,0.4,0.1)
-				love.graphics.rectangle("fill",options[opState]['bpx'][lvl][j] + 5,options[opState]['bpy'][lvl][j] + 5,options[opState]['bd'][lvl][j][1] - 10,options[opState]['bd'][lvl][j][2] - 10)
+				love.graphics.rectangle("fill",options[opState]['bpx'][lvl][j] + 5,
+				options[opState]['bpy'][lvl][j] + 5,options[opState]['bd'][lvl][j][1] - 10,options[opState]['bd'][lvl][j][2] - 10)
 			end
-			
 			-- highlight starting landmass
 			if picked_landmass then
 				love.graphics.setColor(0.4,0.25,0.3)
 				love.graphics.rectangle("fill",start_position[1] + 5,start_position[2] + 5,start_dimen[1] - 10,start_dimen[2] - 10)
 			end
-			
 			drawn = true -- change the boolean after map features are drawn
 
-			-- stuff specifically for decks
+			-- deck stuff
 			if opState <= 3 then
+				love.graphics.setColor(1,1,1,0.8)
+				love.graphics.setFont(smallFont)
+				-- reminder for how to retry
+				love.graphics.printf("backspace - retry",600,10,350,'right')
+
 				love.graphics.setColor(1,1,1)
 
 				-- lives indicator
-				love.graphics.setFont(smallFont)
-				love.graphics.printf("Lives: "..tostring(lives),10,10,120,'center')
+				love.graphics.printf("Lives: "..tostring(lives),10,10,150,'left')
 				
 				love.graphics.setFont(mediumFont)
 				-- if complete, represent the number of completed levels as a fraction
@@ -210,8 +242,8 @@ function love.draw()
 					love.graphics.printf(tostring(lvl).."/"..tostring(#options[opState]['bpx']),380,320,200,'center')
 				-- retry if fail
 				elseif lives == 0 then
-					love.graphics.printf(":(",430,320,100,'center')
-					love.graphics.printf("Tap m to return to menu",180,400,600,'center')
+					love.graphics.printf(":(",430,280,100,'center')
+					love.graphics.printf("Go back to menu",180,360,600,'center')
 				end
 				-- introduce level number
 				if lvl_indicator_timer > 0 then
@@ -222,11 +254,16 @@ function love.draw()
 			-- tutorial stuff
 			elseif opState == 4 then
 
-			-- history lesson
+			-- sbok stuff
 			elseif opState == 5 then
+				if reveal_secret then 
+					love.graphics.setColor(1,1,1)
+					love.graphics.setFont(mediumFont)
+					love.graphics.printf("Kaliningrad",380,320,400,'center')
+				end
 			end
 
-		-- credits page
+		-- credits stuff
 		elseif opState == 6 then
 			love.graphics.setColor(1,1,1)
 			-- thank you
@@ -241,14 +278,20 @@ function love.draw()
 			love.graphics.printf("Font",280,560,400,'center')
 			love.graphics.printf("04",280,600,400,'center')
 		end
+
+		love.graphics.setFont(smallFont)
+		love.graphics.setColor(1,1,1,0.8)
+		love.graphics.printf("m - menu",750,680,200,'right')
+
 	end
 end
 
--- logic for incrementing level number
+
 function love.keypressed(key,scancode,isrepeat)
 	-- retry
 	if key == 'backspace' and gameState == 1 and picked_landmass and bridge_count ~= 0 and lives > 0 then
 		if lives > 1 then
+			replay_sound:play()
 			picked_landmass = false
 			rdc = {}
 			for s = 1,#options[opState]['rd'][lvl] do
@@ -256,7 +299,7 @@ function love.keypressed(key,scancode,isrepeat)
 			end
 			bridge_count = #rdc
 		end
-		lives = lives - 1
+		if opState <= 3 then lives = lives - 1 end
 	end	
 
 	-- return to menu
@@ -277,13 +320,14 @@ function love.keypressed(key,scancode,isrepeat)
 	end
 end
 
--- picking option
+
 function love.mousepressed(x,y,button,istouch)
 	-- choosing menu options
 	if gameState == 0 and button == 1 and option_fade_timer == 1 then
 		for a = 1,#menu['opx'] do
 			if x >= menu['opx'][a] + 5 and x <= menu['opx'][a] + menu['od'][a][1] - 5
 			and y >= menu['opy'][a] + 5 and y <= menu['opy'][a] + menu['od'][a][2] - 5 then
+				click_sound:play()
 				opState = a
 				gameState = 1
 				break
@@ -294,10 +338,11 @@ function love.mousepressed(x,y,button,istouch)
 	-- gameplay mechanics for Decks
 	
 	-- picking starting landmass only after map features are drawn
-	if gameState == 1 and opState <= 5 and picked_landmass == false and drawn and lives > 0 and button == 1 then
+	if gameState == 1 and opState <= 4 and not picked_landmass and drawn and lives > 0 and button == 1 then
 		for r = 1,#options[opState]['bpx'][lvl] do
 			if x >= options[opState]['bpx'][lvl][r] + 5 and x <= options[opState]['bpx'][lvl][r] + options[opState]['bd'][lvl][r][1] - 5
 			and y >= options[opState]['bpy'][lvl][r] + 5 and y <= options[opState]['bpy'][lvl][r] + options[opState]['bd'][lvl][r][2] - 5 then
+				landmass_sound:play()
 				start_position = {options[opState]['bpx'][lvl][r],options[opState]['bpy'][lvl][r]}
 				start_dimen = {options[opState]['bd'][lvl][r][1],options[opState]['bd'][lvl][r][2]}
 				picked_landmass = true
@@ -306,7 +351,7 @@ function love.mousepressed(x,y,button,istouch)
 		end
 	end
 	-- selecting bridges and changing the highlighted landmass
-	if gameState == 1 and opState <= 5 and picked_landmass and button == 1 then
+	if gameState == 1 and opState <= 4 and picked_landmass and button == 1 then
 		for s = 1,#options[opState]['rpx'][lvl] do
 			if x > options[opState]['rpx'][lvl][s] and x < options[opState]['rpx'][lvl][s] + rdc[s][1]
 			and y > options[opState]['rpy'][lvl][s] and y < options[opState]['rpy'][lvl][s] + rdc[s][2] then
@@ -319,6 +364,7 @@ function love.mousepressed(x,y,button,istouch)
 							if options[opState]['rpx'][lvl][s] + rdc[s][1] == options[opState]['bpx'][lvl][t]
 							and options[opState]['rpy'][lvl][s] > options[opState]['bpy'][lvl][t]
 							and options[opState]['rpy'][lvl][s] < options[opState]['bpy'][lvl][t] + options[opState]['bd'][lvl][t][2] then
+								landmass_sound:play()
 								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
 								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0} -- remove bridge once crossed
@@ -333,6 +379,7 @@ function love.mousepressed(x,y,button,istouch)
 							if options[opState]['rpx'][lvl][s] == options[opState]['bpx'][lvl][t] + options[opState]['bd'][lvl][t][1]
 							and options[opState]['rpy'][lvl][s] > options[opState]['bpy'][lvl][t]
 							and options[opState]['rpy'][lvl][s] < options[opState]['bpy'][lvl][t] + options[opState]['bd'][lvl][t][2] then
+								landmass_sound:play()
 								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
 								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0}
@@ -350,6 +397,7 @@ function love.mousepressed(x,y,button,istouch)
 							if options[opState]['rpy'][lvl][s] + rdc[s][2] == options[opState]['bpy'][lvl][t]
 							and options[opState]['rpx'][lvl][s] > options[opState]['bpx'][lvl][t]
 							and options[opState]['rpx'][lvl][s] < options[opState]['bpx'][lvl][t] + options[opState]['bd'][lvl][t][1] then
+								landmass_sound:play()
 								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
 								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0}
@@ -364,6 +412,7 @@ function love.mousepressed(x,y,button,istouch)
 							if options[opState]['rpy'][lvl][s] == options[opState]['bpy'][lvl][t] + options[opState]['bd'][lvl][t][2]
 							and options[opState]['rpx'][lvl][s] > options[opState]['bpx'][lvl][t]
 							and options[opState]['rpx'][lvl][s] < options[opState]['bpx'][lvl][t] + options[opState]['bd'][lvl][t][1] then
+								landmass_sound:play()
 								start_position = {options[opState]['bpx'][lvl][t],options[opState]['bpy'][lvl][t]}
 								start_dimen = {options[opState]['bd'][lvl][t][1],options[opState]['bd'][lvl][t][2]}
 								rdc[s] = {0,0}
