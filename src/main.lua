@@ -37,6 +37,10 @@ function love.load()
 	bridge_count = 0
 	lives = 3
 	
+	--tutorial pieces
+	tut_timer = 1
+	tut_move = false
+
 	-- fonts
 	tinyFont = love.graphics.newFont(1)
 	smallFont = love.graphics.newFont("font.ttf",34)
@@ -110,6 +114,14 @@ function love.update(dt)
 				end
 			elseif lvl_indicator_timer > 0 then lvl_indicator_timer = lvl_indicator_timer - 2/3*dt end
 		end
+		-- for the tutorial
+		if opState == 4 then
+			if bridge_count == 0 and not tut_move then
+				tut_timer = tut_timer - dt
+			end
+			if tut_timer <= 0 then tut_move = true end
+			if tut_move then tut_timer = tut_timer + 1/2*dt end
+		end
 	end
 
 	-- pass all levels and there's a secret in SBOK
@@ -176,9 +188,9 @@ function love.draw()
 		-- option names
 		love.graphics.setColor(0,0,0,option_fade_timer)
 		love.graphics.setFont(mediumFont)
-		love.graphics.printf("Deck 1",menu['opx'][1] + 10,menu['opy'][1] + 12,menu['od'][1][1],'center')
-		love.graphics.printf("Deck 2",menu['opx'][2] + 10,menu['opy'][2] + 12,menu['od'][2][1],'center')
-		love.graphics.printf("Deck 3",menu['opx'][3] + 10,menu['opy'][3] + 12,menu['od'][3][1],'center')
+		love.graphics.printf("Deck #1",menu['opx'][1] + 10,menu['opy'][1] + 12,menu['od'][1][1],'center')
+		love.graphics.printf("Deck #2",menu['opx'][2] + 10,menu['opy'][2] + 12,menu['od'][2][1],'center')
+		love.graphics.printf("Deck #3",menu['opx'][3] + 10,menu['opy'][3] + 12,menu['od'][3][1],'center')
 		love.graphics.printf("Tutorial",menu['opx'][4] + 10,menu['opy'][4] + 12,menu['od'][4][1],'center')
 		love.graphics.printf("SBOK",menu['opx'][5] + 10,menu['opy'][5] + 12,menu['od'][5][1],'center')
 		love.graphics.printf("Credits",menu['opx'][6] + 10,menu['opy'][6] + 12,menu['od'][6][1],'center')
@@ -253,13 +265,53 @@ function love.draw()
 
 			-- tutorial stuff
 			elseif opState == 4 then
+				if lvl == 1 then
+					love.graphics.setColor(1,1,1)
+					love.graphics.setFont(mediumFont)
+					love.graphics.printf("Game Pieces",300,70,360,'center')
+					love.graphics.printf("__________",300,100,360,'center')
+					love.graphics.printf("= Landmass",500,240,360,'left')
+					love.graphics.printf("= Bridge",460,440,360,'left')
+					-- brown landmass
+					love.graphics.setColor(0.18,0.16,0.12)
+					love.graphics.rectangle("fill",160,190,300,180)
+					-- green landmass
+					love.graphics.setColor(0.2,0.4,0.1)
+					love.graphics.rectangle("fill",165,195,290,170)
+					-- railings
+					love.graphics.setColor(0.4,0.4,0.4)
+					love.graphics.rectangle("fill",200,440,220,72)
+					-- bridge
+					love.graphics.setColor(0.1,0.1,0.1)
+					love.graphics.rectangle("fill",200,445,220,62)
+				end
+				if lvl == 2 then
+					love.graphics.setColor(1,1,1)
+					love.graphics.setFont(mediumFont)
+					love.graphics.printf("Cross each Bridge just once",50,70,860,'center')
+					love.graphics.setFont(smallFont)
+					love.graphics.printf("1) Click on a Landmass to start",100,440,760,'left')
+					love.graphics.printf("2) Click on a Bridge to cross it",100,510,760,'left')
+				end
+				if lvl == 3 then
+					love.graphics.setColor(1,1,1)
+					love.graphics.setFont(mediumFont)
+					love.graphics.printf("Cross each Bridge just once",50,70,860,'center')
+					love.graphics.setFont(smallFont)
+					love.graphics.printf("Press \"Backspace\" to retry",100,520,760,'center')
+				end
+				if tut_move then
+					love.graphics.setColor(1,1,1,tut_timer)
+					love.graphics.setFont(smallFont)
+					love.graphics.printf("Press \"Enter\"",230,630,500,'center')
+				end
 
 			-- sbok stuff
 			elseif opState == 5 then
 				if reveal_secret then 
 					love.graphics.setColor(1,1,1)
 					love.graphics.setFont(mediumFont)
-					love.graphics.printf("Kaliningrad",380,320,400,'center')
+					love.graphics.printf("Kaliningrad",280,320,400,'center')
 				end
 			end
 
@@ -282,7 +334,6 @@ function love.draw()
 		love.graphics.setFont(smallFont)
 		love.graphics.setColor(1,1,1,0.8)
 		love.graphics.printf("m - menu",750,680,200,'right')
-
 	end
 end
 
@@ -312,6 +363,18 @@ function love.keypressed(key,scancode,isrepeat)
 		lvl = 1
 		lvl_indicator_timer = 1
 		prep_lvl_timer = 1
+	end
+
+	-- tutorial move
+	if key == 'return' and tut_move and gameState == 1 and opState == 4 then
+		if lvl < 3 then lvl = lvl + 1 else
+			lvl = 1
+			gameState = 0
+			option_fade_timer = 0
+		end
+		tut_timer = 1
+		tut_move = false
+		picked_landmass = false
 	end
 	
 	-- quit game
