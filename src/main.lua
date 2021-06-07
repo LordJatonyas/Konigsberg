@@ -296,7 +296,7 @@ function love.draw()
 				if lvl == 3 then
 					love.graphics.setColor(1,1,1)
 					love.graphics.setFont(mediumFont)
-					love.graphics.printf("Cross each Bridge just once",50,70,860,'center')
+					love.graphics.printf("Cross all the Bridges",50,70,860,'center')
 					love.graphics.setFont(smallFont)
 					love.graphics.printf("Press \"Backspace\" to retry",100,520,760,'center')
 				end
