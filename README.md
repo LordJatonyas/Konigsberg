@@ -1,9 +1,9 @@
 # Konigsberg
 A 2D puzzle game inspired by Euler's "Seven Bridges of Königsberg" thought experiment.
 
-## Build Status
-The game is incomplete. I will be adding several features to the game:
+## How To Play?
+For a given playable level, your task is to cross every bridge just once. To prevent any confusion, I suggest going through the tutorial first before trying at the decks.
+To run the game, download this [file]() and double-click Konigsberg.html. You should be playing the game on your web browser in no time.
 
-1) Making the final level a stand-alone option
-
-Once completed, I will provide instructions for running the game on your very own machine.
+## Credits
+Bernhard Schelling - [LOVE Web Builder](https://schellingb.github.io/LoveWebBuilder/)

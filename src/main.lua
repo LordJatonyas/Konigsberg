@@ -2,9 +2,9 @@ function love.load()
 	menu = require "menu"
 
 	-- fit all options into an a table
-	deck1 = require "deck1"
-	deck2 = require "deck2"
-	deck3 = require "deck3"
+	deck1 = require "decks/deck1"
+	deck2 = require "decks/deck2"
+	deck3 = require "decks/deck3"
 	tutorial = require "tutorial"
 	sbok = require "sbok"
 	options = {deck1,deck2,deck3,tutorial,sbok}
@@ -56,9 +56,9 @@ function love.load()
 	largeFont = love.graphics.newFont("font.ttf",72)
 	
 	-- sounds
-	ClairDeLune = love.audio.newSource('ClairDeLune.wav','static')
-	click_sound = love.audio.newSource('click.wav','static')
-	landmass_sound = love.audio.newSource('landmass.wav','static')
+	ClairDeLune = love.audio.newSource('sounds/ClairDeLune.wav','static')
+	click_sound = love.audio.newSource('sounds/click.wav','static')
+	landmass_sound = love.audio.newSource('sounds/landmass.wav','static')
 end
 
 
@@ -110,7 +110,7 @@ function love.update(dt)
 		-- for playable levels
 		if opState <= 3 then
 			-- keep track of time taken on decks
-			if lives > 0 then
+			if lives > 0 and not game_completed then
 				time_taken = time_taken + dt
 				minutes = math.floor(time_taken/60)
 				seconds = math.floor(time_taken - minutes*60)
@@ -205,13 +205,13 @@ function love.draw()
 			love.graphics.rectangle("fill",menu['opx'][c] + 5,menu['opy'][c] + 5,menu['od'][c][1] - 10,menu['od'][c][2] - 10)
 		end
 		-- green lights if players clears deck
-		if deck1_passed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.1,0.3,option_fade_timer) end
+		if deck1_passed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.2,0.2,option_fade_timer) end
 		love.graphics.rectangle("fill",menu['opx'][1] - 50,menu['opy'][1] + 30,20,20)
-		if deck2_passed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.1,0.3,option_fade_timer) end
+		if deck2_passed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.2,0.2,option_fade_timer) end
 		love.graphics.rectangle("fill",menu['opx'][2] - 50,menu['opy'][2] + 30,20,20)
-		if deck3_passed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.1,0.3,option_fade_timer) end
+		if deck3_passed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.2,0.2,option_fade_timer) end
 		love.graphics.rectangle("fill",menu['opx'][3] - 50,menu['opy'][3] + 30,20,20)
-		if game_completed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.1,0.3,option_fade_timer) end
+		if game_completed then love.graphics.setColor(0.1,0.7,0.2,option_fade_timer) else love.graphics.setColor(0.9,0.2,0.2,option_fade_timer) end
 		love.graphics.rectangle("fill",menu['opx'][5] - 50,menu['opy'][5] + 30,20,20)
 		-- title
 		love.graphics.setColor(1,1,1)
@@ -352,6 +352,7 @@ function love.draw()
 					love.graphics.setColor(1,1,1)
 					love.graphics.setFont(mediumFont)
 					if bridge_count ~= 0 then love.graphics.printf("1945",280,320,400,'center')
+					-- show record
 					else
 						love.graphics.printf("Game Complete",280,250,400,'center')
 						love.graphics.printf("Time(Decks): "..tostring(minutes)..":"..string.format("%02d",seconds),200,320,560,'center')
@@ -401,7 +402,8 @@ function love.keypressed(key,scancode,isrepeat)
 		end
 		if opState <= 3 then
 			lives = lives - 1
-			lives_used = lives_used + 1
+			-- keep track of number of lives used
+			if not game_completed then lives_used = lives_used + 1 end
 		end
 	end	
 
