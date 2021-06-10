@@ -424,11 +424,6 @@ function love.keypressed(key,scancode,isrepeat)
 		tut_retried = false
 		picked_landmass = false
 	end
-	
-	-- quit game
-	if key == 'escape' then
-		love.event.quit()
-	end
 end
 
 
