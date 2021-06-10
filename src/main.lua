@@ -110,7 +110,11 @@ function love.update(dt)
 		-- for playable levels
 		if opState <= 3 then
 			-- keep track of time taken on decks
-			if lives > 0 then time_taken = time_taken + dt end
+			if lives > 0 then
+				time_taken = time_taken + dt
+				minutes = math.floor(time_taken/60)
+				seconds = math.floor(time_taken - minutes*60)
+			end
 			-- if you pass
 			if bridge_count == 0 then
 				-- wait a while before automatically moving onto next level
@@ -270,6 +274,8 @@ function love.draw()
 				love.graphics.setFont(smallFont)
 				-- reminder for how to retry
 				love.graphics.printf("backspace - retry",600,10,350,'right')
+				-- timer
+				love.graphics.printf(tostring(minutes)..":"..string.format("%02d",seconds),40,670,200,'left')
 
 				love.graphics.setColor(1,1,1)
 
@@ -347,10 +353,8 @@ function love.draw()
 					love.graphics.setFont(mediumFont)
 					if bridge_count ~= 0 then love.graphics.printf("1945",280,320,400,'center')
 					else
-						minutes = math.floor(time_taken/60)
-						seconds = math.floor(time_taken - minutes*60)
 						love.graphics.printf("Game Complete",280,250,400,'center')
-						love.graphics.printf("Time Taken: "..tostring(minutes)..":"..string.format("%02d",seconds),200,320,560,'center')
+						love.graphics.printf("Time(Decks): "..tostring(minutes)..":"..string.format("%02d",seconds),200,320,560,'center')
 						love.graphics.printf("Lives Used: "..tostring(lives_used),280,370,400,'center')
 						game_completed = true
 					end
