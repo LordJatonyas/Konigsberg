@@ -1,12 +1,12 @@
 function love.load()
-	menu = require "menu"
+	menu = require "gameStates/menu/menu"
 
 	-- fit all options into an a table
-	deck1 = require "decks/deck1"
-	deck2 = require "decks/deck2"
-	deck3 = require "decks/deck3"
-	tutorial = require "tutorial"
-	sbok = require "sbok"
+	deck1 = require "gameStates/options/decks/deck1"
+	deck2 = require "gameStates/options/decks/deck2"
+	deck3 = require "gameStates/options/decks/deck3"
+	tutorial = require "gameStates/options/tutorial"
+	sbok = require "gameStates/options/sbok"
 	options = {deck1,deck2,deck3,tutorial,sbok}
 	
 	-- fun menu stuff
@@ -44,6 +44,9 @@ function love.load()
 	tut_retried = false
 
 	-- records
+	deck1_time = 0
+	deck2_time = 0
+	deck3_time = 0
 	time_taken = 0
 	minutes = 0
 	seconds = 0
@@ -51,9 +54,9 @@ function love.load()
 
 	-- fonts
 	tinyFont = love.graphics.newFont(1)
-	smallFont = love.graphics.newFont("font.ttf",34)
-	mediumFont = love.graphics.newFont("font.ttf",52)
-	largeFont = love.graphics.newFont("font.ttf",72)
+	smallFont = love.graphics.newFont("fonts/font.ttf",34)
+	mediumFont = love.graphics.newFont("fonts/font.ttf",52)
+	largeFont = love.graphics.newFont("fonts/font.ttf",72)
 	
 	-- sounds
 	ClairDeLune = love.audio.newSource('sounds/ClairDeLune.wav','static')
@@ -106,14 +109,24 @@ function love.update(dt)
 			end
 			draw = true
 		end
-	
+
 		-- for playable levels
 		if opState <= 3 then
-			-- keep track of time taken on decks
-			if lives > 0 and not game_completed then
-				time_taken = time_taken + dt
-				minutes = math.floor(time_taken/60)
-				seconds = math.floor(time_taken - minutes*60)
+			-- keep track of timing for each deck
+			if opState == 1 then
+				if not deck1_passed and lives > 0 then deck1_time = deck1_time + dt end
+				minutes = math.floor(deck1_time/60)
+				seconds = math.floor(deck1_time - minutes*60)
+			end
+			if opState == 2 then
+				if not deck2_passed and lives > 0 then deck2_time = deck2_time + dt end
+				minutes = math.floor(deck2_time/60)
+				seconds = math.floor(deck2_time - minutes*60)
+			end
+			if opState == 3 then
+				if not deck3_passed and lives > 0 then deck3_time = deck3_time + dt end
+				minutes = math.floor(deck3_time/60)
+				seconds = math.floor(deck3_time - minutes*60)
 			end
 			-- if you pass
 			if bridge_count == 0 then
@@ -354,6 +367,9 @@ function love.draw()
 					if bridge_count ~= 0 then love.graphics.printf("1945",280,320,400,'center')
 					-- show record
 					else
+						time_taken = deck1_time + deck2_time + deck3_time
+						minutes = math.floor(time_taken/60)
+						seconds = math.floor(time_taken - minutes*60)
 						love.graphics.printf("Game Complete",280,250,400,'center')
 						love.graphics.printf("Time(Decks): "..tostring(minutes)..":"..string.format("%02d",seconds),200,320,560,'center')
 						love.graphics.printf("Lives Used: "..tostring(lives_used),280,370,400,'center')
