@@ -51,6 +51,9 @@ function love.load()
 	minutes = 0
 	seconds = 0
 	lives_used = 1
+	score = 0
+	grade_idx = 13
+	grades = {"A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"}
 
 	-- fonts
 	tinyFont = love.graphics.newFont(1)
@@ -91,8 +94,7 @@ function love.update(dt)
 	end
 
 	-- for options
-	if gameState == 1 then
-		
+	if gameState == 1 then		
 		if opState <= 5 and not picked_landmass then
 			-- make a copy of the bridge dimensions
 			rdc = {}
@@ -347,6 +349,11 @@ function love.draw()
 					love.graphics.setFont(smallFont)
 					love.graphics.printf("Press \"Backspace\" to retry",100,520,760,'center')
 				end
+				if lvl == 4 then
+					love.graphics.setColor(1,1,1)
+					love.graphics.setFont(mediumFont)
+					love.graphics.printf("Now solve all 3 Decks!",50,300,860,'center')
+				end
 				if tut_move then
 					love.graphics.setColor(1,1,1,tut_timer)
 					love.graphics.setFont(smallFont)
@@ -370,9 +377,15 @@ function love.draw()
 						time_taken = deck1_time + deck2_time + deck3_time
 						minutes = math.floor(time_taken/60)
 						seconds = math.floor(time_taken - minutes*60)
+						score = time_taken + (lives_used - 1)*15
+						if score <= 150 then grade_idx = 1
+						elseif score > 480 then grade_idx = 13
+						else grade_idx = math.floor((score - 150)/30) + 2 end
 						love.graphics.printf("Game Complete",280,250,400,'center')
 						love.graphics.printf("Time(Decks): "..tostring(minutes)..":"..string.format("%02d",seconds),200,320,560,'center')
 						love.graphics.printf("Lives Used: "..tostring(lives_used),280,370,400,'center')
+						love.graphics.printf("Grade: "..grades[grade_idx],280,420,400,'center')
+						love.graphics.printf("Restart the Game to Try Again!",200,570,560,'center')
 						game_completed = true
 					end
 				else
@@ -398,6 +411,7 @@ function love.draw()
 			love.graphics.printf("04",280,600,400,'center')
 		end
 
+		-- how to return to menu
 		love.graphics.setFont(smallFont)
 		love.graphics.setColor(1,1,1,0.8)
 		love.graphics.printf("m - menu",750,680,200,'right')
@@ -419,7 +433,7 @@ function love.keypressed(key,scancode,isrepeat)
 		if opState <= 3 then
 			lives = lives - 1
 			-- keep track of number of lives used
-			if not game_completed then lives_used = lives_used + 1 end
+			if (not deck1_passed and opState == 1) or (not deck2_passed and opState == 2) or (not deck3_passed and opState == 3) then lives_used = lives_used + 1 end
 		end
 	end	
 
@@ -430,7 +444,7 @@ function love.keypressed(key,scancode,isrepeat)
 
 	-- tutorial move
 	if key == 'return' and tut_move and gameState == 1 and opState == 4 then
-		if lvl < 3 then lvl = lvl + 1
+		if lvl < 4 then lvl = lvl + 1
 		else
 			gameState = 0
 			option_fade_timer = 0
