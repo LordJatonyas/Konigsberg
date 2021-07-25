@@ -6,7 +6,7 @@ For a given playable level, your task is to cross every bridge just once. To pre
 
 To run the game, download this [file](https://github.com/LordJatonyas/Konigsberg/blob/master/play/Konigsberg.zip) and double-click Konigsberg.html. You should be playing the game on your web browser in no time.
 
-Complete all the decks and receive your grade by solving SBOK. Have fun!
+**Complete all the decks and receive your grade by solving SBOK.** Have fun!
 
 ## Credits
 Bernhard Schelling - [LÖVE Web Builder](https://schellingb.github.io/LoveWebBuilder/)
