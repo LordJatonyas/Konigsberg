@@ -1,5 +1,6 @@
 # Konigsberg
 ![SBOK Logo](SBOK.png)
+
 A 2D puzzle game inspired by Euler's "Seven Bridges of Königsberg" thought experiment.
 
 ## How To Play?
