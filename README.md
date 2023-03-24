@@ -2,7 +2,7 @@
 A 2D puzzle game inspired by Euler's "Seven Bridges of Königsberg" thought experiment.
 
 <p align="center">
-  <img width="600" height="200" src="SBOK.png">
+  <img width="600" height="600" src="SBOK.png">
 </p>
 
 ## How To Play?
