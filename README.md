@@ -1,6 +1,8 @@
 # Konigsberg
 A 2D puzzle game inspired by Euler's "Seven Bridges of Königsberg" thought experiment.
 
+![SBOK Logo](SBOK.png)
+
 ## How To Play?
 For a given playable level, your task is to cross every bridge just once. To prevent any confusion, I suggest going through the tutorial first before trying at the decks.
 
